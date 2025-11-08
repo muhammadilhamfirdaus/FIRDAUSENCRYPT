@@ -1,105 +1,11 @@
-FirdausEncrypt: Aplikasi Enkripsi File Multi-Lapis
-
-Proyek ini adalah aplikasi web yang dibangun dengan Laravel untuk enkripsi dan dekripsi file sisi klien (client-side) yang aman. Aplikasi ini menggunakan pendekatan enkripsi berlapis (multi-layer) yang kuat, menggabungkan enkripsi simetris (AES) dan asimetris (RSA) untuk memastikan keamanan file dan menyediakan fungsionalitas key escrow (backup kunci) opsional oleh admin.
-
-UI aplikasi ini dirancang dengan tema "Web3" / glassmorphism modern menggunakan Tailwind CSS.
-
-Fitur Utama
-
-Enkripsi Berbasis Passphrase: File dienkripsi menggunakan passphrase yang dibuat oleh pengguna. Passphrase ini tidak pernah disimpan di server.
-
-Enkripsi Multi-Lapis: Keamanan berlapis untuk perlindungan maksimal (dijelaskan di bawah).
-
-Zero-Knowledge (Alur Utama): Alur dekripsi utama mengharuskan pengguna mengunggah file .enc mereka dan memasukkan passphrase mereka, membuktikan bahwa server tidak dapat membaca file pengguna.
-
-File Enkripsi Mandiri (.enc): Saat mengunduh, file .enc yang dihasilkan berisi header metadata (IV, Salt, Tag, dll) dan payload terenkripsi. File ini portabel dan dapat didekripsi di mana saja (dengan aplikasi ini).
-
-Key Escrow (Admin): Kunci AES yang digunakan untuk enkripsi juga "dibungkus" (dienkripsi) menggunakan kunci publik RSA server. Ini memungkinkan admin (dengan akses ke kunci privat server) untuk memulihkan file jika pengguna lupa passphrase mereka.
-
-Arsitektur Keamanan
-
-Keamanan aplikasi ini bergantung pada 3 lapisan enkripsi yang diterapkan secara berurutan saat proses upload.
-
-🔒 Proses Enkripsi (Upload)
-
-Persiapan Kunci:
-
-Passphrase (dari pengguna) dan Salt (dibuat acak) digabungkan.
-
-Hasilnya "ditempa" menggunakan PBKDF2 (500.000 iterasi) untuk menghasilkan Kunci AES-256 yang kuat.
-
-Lapisan 1: XOR (Obfuskasi/Samaran)
-
-File Asli di-XOR dengan Mask (64 byte acak) untuk menyamarkan data asli.
-
-Hasil: Data Ter-obfuskasi.
-
-Lapisan 2: AES-256-GCM (Enkripsi Inti)
-
-Data Ter-obfuskasi dienkripsi menggunakan Kunci AES (dari Langkah 1) dan IV (data acak).
-
-Mode GCM (Galois/Counter Mode) dipilih karena sangat cepat (bekerja sebagai stream cipher) dan menyediakan otentikasi (membuat Tag).
-
-Hasil: Payload Terenkripsi dan Tag Otentikasi (segel digital).
-
-Lapisan 3: RSA-4096 (Key Escrow/Backup)
-
-Kunci AES (dari Langkah 1) dienkripsi menggunakan Kunci Publik RSA server.
-
-Hasil: Wrapped Key (Kunci AES yang terenkripsi).
-
-Finalisasi (File .enc)
-
-Semua metadata (iv, salt, tag, mask, wrapped_key, original_filename) disimpan sebagai header JSON.
-
-File .enc akhir adalah: [Header JSON] + ::METADATA_SEPARATOR:: + [Payload Terenkripsi].
-
-🔑 Proses Dekripsi (Download)
-
-Pemisahan: File .enc yang di-upload dibaca dan dipisah (menggunakan ::METADATA_SEPARATOR::) menjadi Header JSON dan Payload Terenkripsi.
-
-Pembuatan Ulang Kunci: Passphrase (dari pengguna) dan Salt (dari header JSON) "ditempa" ulang menggunakan PBKDF2 untuk membuat Kunci AES (Versi Pengguna).
-
-Pembukaan Brankas (AES-GCM): Sistem mencoba mendekripsi Payload Terenkripsi menggunakan Kunci AES (Versi Pengguna), IV, dan Tag.
-
-Ini adalah gerbang keamanan: Jika Passphrase salah (Kunci AES salah) atau file telah dirusak (Tag tidak cocok), proses ini akan GAGAL.
-
-Pembukaan Samaran (XOR): Jika AES berhasil, Data Ter-obfuskasi yang dihasilkan akan di-XOR dengan Mask (dari header JSON) untuk mengembalikan File Asli.
-
-Instalasi Lokal
-
-Clone repositori:
-
-git clone [URL-REPO-ANDA]
+FirdausEncrypt: Aplikasi Enkripsi File Multi-LapisProyek ini adalah aplikasi web yang dibangun dengan Laravel untuk enkripsi dan dekripsi file sisi klien (client-side) yang aman. Aplikasi ini menggunakan pendekatan enkripsi berlapis (multi-layer) yang kuat, menggabungkan enkripsi simetris (AES) dan asimetris (RSA) untuk memastikan keamanan file dan menyediakan fungsionalitas key escrow (backup kunci) opsional oleh admin.UI aplikasi ini dirancang dengan tema "Web3" / glassmorphism modern menggunakan Tailwind CSS.Fitur UtamaEnkripsi Berbasis Passphrase: File dienkripsi menggunakan passphrase yang dibuat oleh pengguna. Passphrase ini tidak pernah disimpan di server.Enkripsi Multi-Lapis: Keamanan berlapis untuk perlindungan maksimal (dijelaskan di bawah).Zero-Knowledge (Alur Utama): Alur dekripsi utama mengharuskan pengguna mengunggah file .enc mereka dan memasukkan passphrase mereka, membuktikan bahwa server tidak dapat membaca file pengguna.File Enkripsi Mandiri (.enc): Saat mengunduh, file .enc yang dihasilkan berisi header metadata (IV, Salt, Tag, dll) dan payload terenkripsi. File ini portabel dan dapat didekripsi di mana saja (dengan aplikasi ini).Key Escrow (Admin): Kunci AES yang digunakan untuk enkripsi juga "dibungkus" (dienkripsi) menggunakan kunci publik RSA server. Ini memungkinkan admin (dengan akses ke kunci privat server) untuk memulihkan file jika pengguna lupa passphrase mereka.Arsitektur KeamananKeamanan aplikasi ini bergantung pada 3 lapisan enkripsi yang diterapkan secara berurutan saat proses upload.🔒 Proses Enkripsi (Upload)Persiapan Kunci:Passphrase (dari pengguna) dan Salt (dibuat acak) digabungkan.Hasilnya "ditempa" menggunakan PBKDF2 (500.000 iterasi) untuk menghasilkan Kunci AES-256 yang kuat.Lapisan 1: XOR (Obfuskasi/Samaran)File Asli di-XOR dengan Mask (64 byte acak) untuk menyamarkan data asli.Hasil: Data Ter-obfuskasi.Lapisan 2: AES-256-GCM (Enkripsi Inti)Data Ter-obfuskasi dienkripsi menggunakan Kunci AES (dari Langkah 1) dan IV (data acak).Mode GCM (Galois/Counter Mode) dipilih karena sangat cepat (bekerja sebagai stream cipher) dan menyediakan otentikasi (membuat Tag).Hasil: Payload Terenkripsi dan Tag Otentikasi (segel digital).Lapisan 3: RSA-4096 (Key Escrow/Backup)Kunci AES (dari Langkah 1) dienkripsi menggunakan Kunci Publik RSA server.Hasil: Wrapped Key (Kunci AES yang terenkripsi).Finalisasi (File .enc)Semua metadata (iv, salt, tag, mask, wrapped_key, original_filename) disimpan sebagai header JSON.File .enc akhir adalah: [Header JSON] + ::METADATA_SEPARATOR:: + [Payload Terenkripsi].🔑 Proses Dekripsi (Download)Pemisahan: File .enc yang di-upload dibaca dan dipisah (menggunakan ::METADATA_SEPARATOR::) menjadi Header JSON dan Payload Terenkripsi.Pembuatan Ulang Kunci: Passphrase (dari pengguna) dan Salt (dari header JSON) "ditempa" ulang menggunakan PBKDF2 untuk membuat Kunci AES (Versi Pengguna).Pembukaan Brankas (AES-GCM): Sistem mencoba mendekripsi Payload Terenkripsi menggunakan Kunci AES (Versi Pengguna), IV, dan Tag.Ini adalah gerbang keamanan: Jika Passphrase salah (Kunci AES salah) atau file telah dirusak (Tag tidak cocok), proses ini akan GAGAL.Pembukaan Samaran (XOR): Jika AES berhasil, Data Ter-obfuskasi yang dihasilkan akan di-XOR dengan Mask (dari header JSON) untuk mengembalikan File Asli.Instalasi LokalClone repositori:git clone [URL-REPO-ANDA]
 cd FirdausEncrypt
-
-
-Instal dependensi PHP:
-
-composer install
-
-
-Setup file .env:
-
-# Salin file contoh
+Instal dependensi PHP:composer install
+Setup file .env:# Salin file contoh
 # (Gunakan 'copy' di Windows CMD)
 cp .env.example .env
-
-
-Buat Kunci Aplikasi Laravel:
-
-php artisan key:generate
-
-
-Setup Database:
-
-Pastikan Anda memiliki database (misal: firdaus_encrypt).
-
-Atur koneksi database Anda di file .env (misalnya DB_DATABASE, DB_USERNAME, DB_PASSWORD).
-
-(WAJIB) Buat Kunci Enkripsi RSA:
-
-# Buat direktori (gunakan '\' di Windows CMD)
+Buat Kunci Aplikasi Laravel:php artisan key:generate
+Setup Database:Pastikan Anda memiliki database (misal: firdaus_encrypt).Atur koneksi database Anda di file .env (misalnya DB_DATABASE, DB_USERNAME, DB_PASSWORD).(WAJIB) Buat Kunci Enkripsi RSA:# Buat direktori (gunakan '\' di Windows CMD)
 mkdir storage\app\keys
 
 # 1. Buat Kunci Privat (Anda akan diminta membuat passphrase)
@@ -107,32 +13,7 @@ openssl genpkey -algorithm RSA -out storage\app\keys\private.pem -pkeyopt rsa_ke
 
 # 2. Ekstrak Kunci Publik
 openssl rsa -in storage\app\keys\private.pem -pubout -out storage\app\keys\public.pem
-
-
-(Jika openssl tidak ditemukan, gunakan path XAMPP Anda: C:\xampp\apache\bin\openssl.exe)
-
-(WAJIB) Konfigurasi .env untuk RSA:
-Tambahkan passphrase yang Anda buat di langkah 6 ke file .env Anda:
-
-RSA_PRIVATE_KEY_PASSPHRASE="passphrase-kunci-privat-anda"
-
-
-Jalankan Migrasi Database:
-
-php artisan migrate
-
-
-Jalankan Server:
-
-php artisan serve
-
-
-Aplikasi Anda sekarang berjalan di http://127.0.0.1:8000.
-
-⚠️ Catatan Penting: Batasan File Besar
-
-Versi aplikasi saat ini menggunakan file_get_contents() di EncryptionService. Ini berarti seluruh file dimuat ke dalam memori selama enkripsi dan dekripsi.
-
-Ini berfungsi baik untuk file teks, gambar, dan dokumen kecil/menengah, tetapi akan GAGAL (PHP Memory Exhaustion) untuk file yang sangat besar (misalnya file video 500MB).
-
-Untuk mendukung file yang sangat besar, logika di EncryptionService harus di-refaktor untuk menggunakan streaming (misalnya fopen, fread, fwrite) dan mem-pipe data melalui proc_open() ke openssl enc atau menggunakan libsodium.
+(Jika openssl tidak ditemukan, gunakan path XAMPP Anda: C:\xampp\apache\bin\openssl.exe)(WAJIB) Konfigurasi .env untuk RSA:Tambahkan passphrase yang Anda buat di langkah 6 ke file .env Anda:RSA_PRIVATE_KEY_PASSPHRASE="passphrase-kunci-privat-anda"
+Jalankan Migrasi Database:php artisan migrate
+Jalankan Server:php artisan serve
+Aplikasi Anda sekarang berjalan di http://127.0.0.1:8000.⚠️ Catatan Penting: Batasan File BesarVersi aplikasi saat ini menggunakan file_get_contents() di EncryptionService. Ini berarti seluruh file dimuat ke dalam memori selama enkripsi dan dekripsi.Ini berfungsi baik untuk file teks, gambar, dan dokumen kecil/menengah, tetapi akan GAGAL (PHP Memory Exhaustion) untuk file yang sangat besar (misalnya file video 500MB).Untuk mendukung file yang sangat besar, logika di EncryptionService harus di-refaktor untuk menggunakan streaming (misalnya fopen, fread, fwrite) dan mem-pipe data melalui proc_open() ke openssl enc atau menggunakan libsodium.
